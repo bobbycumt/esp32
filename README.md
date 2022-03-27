@@ -1,5 +1,7 @@
 # esp32实验代码
 ## led_mp
+实时获取天气
+
 使用vscode和micropython
 
 使用ssd1306的OLED屏幕
