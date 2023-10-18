@@ -3,6 +3,11 @@ import mixiot
 from ubinascii import hexlify
 import time
 
+up = machine.Pin(15, machine.Pin.OUT)
+down = machine.Pin(4, machine.Pin.OUT)
+lock = machine.Pin(2, machine.Pin.OUT)
+stop = machine.Pin(5, machine.Pin.OUT)
+
 def m1(client, topic, msg):
     if int(msg) == 1:
         up.value(1)
@@ -35,12 +40,6 @@ def m4(client, topic, msg):
     else:
         stop.value(0)
 
-
-
-up = machine.Pin(15, machine.Pin.OUT)
-down = machine.Pin(4, machine.Pin.OUT)
-lock = machine.Pin(2, machine.Pin.OUT)
-stop = machine.Pin(5, machine.Pin.OUT)
 mixiot.wlan_connect('CU_future','13582579999')
 MQTT_USR_PRJ = 'bobbycumt@163.com/test/'
 mqtt_client = mixiot.init_MQTT_client('mixio.mixly.cn', 'bobbycumt@163.com', '500f0e0c7110446a2320bd5eb652f447', MQTT_USR_PRJ)
