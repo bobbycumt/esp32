@@ -10,9 +10,6 @@ down = Pin(4, Pin.OUT)
 lock = Pin(2, Pin.OUT)
 stop = Pin(5, Pin.OUT)
 
-ssid = 'bbhh'
-password = 'lb19850922'
-
 client_id='pc_esp32' 
 server = 'bj-2-mqtt.iot-api.com' 
 port = 1883 #连接的端口
@@ -48,15 +45,17 @@ def sub_cb(topic, msg):
         stop.value(0)
 
 def do_connect():
+    ssid = 'bbhh'
+    password = 'lb19850922'
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     # print(wlan.scan())
     if not wlan.isconnected():
-        print('connecting to network...')
+        # print('connecting to network...')
         wlan.connect(ssid, password)
         while not wlan.isconnected():
             pass
-    print('network config:', wlan.ifconfig())
+    # print('network config:', wlan.ifconfig())
 
 def main():
     do_connect()
