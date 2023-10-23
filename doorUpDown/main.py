@@ -5,6 +5,8 @@ import utime
 import random
 import ujson as json
 
+ssid = 'bbhh'
+password = 'lb19850922'
 up = Pin(15, Pin.OUT)
 down = Pin(4, Pin.OUT)
 lock = Pin(2, Pin.OUT)
@@ -20,7 +22,7 @@ pwd = 'VW6nAnxPSC'
 c = MQTTClient(client_id, server,port,user,pwd,60) 
 
 def sub_cb(topic, msg):
-    # print((topic, msg))
+    print((topic, msg))
     msg = json.loads(msg)
     if list(msg.keys())[0]=='up':
         # if msg['up']==True:
@@ -45,17 +47,15 @@ def sub_cb(topic, msg):
         stop.value(0)
 
 def do_connect():
-    ssid = 'bbhh'
-    password = 'lb19850922'
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     # print(wlan.scan())
     if not wlan.isconnected():
-        # print('connecting to network...')
+        print('connecting to network...')
         wlan.connect(ssid, password)
         while not wlan.isconnected():
             pass
-    # print('network config:', wlan.ifconfig())
+    print('network config:', wlan.ifconfig())
 
 def main():
     do_connect()
@@ -66,10 +66,11 @@ def main():
     ct=utime.ticks_ms()
     while True:
         c.check_msg()
-        ct=utime.ticks_ms()
-        if ct-pt>5000:
-            pt=utime.ticks_ms()
-            c.publish(b"attributes", '{"temp": '+str(int(random.random()*100))+'}')
+        utime.sleep(1)
+        # ct=utime.ticks_ms()
+        # if ct-pt>5000:
+        #     pt=utime.ticks_ms()
+        #     c.publish(b"attributes", '{"temp": '+str(int(random.random()*100))+'}')
     
 if __name__ == '__main__':
     main()
