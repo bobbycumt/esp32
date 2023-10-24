@@ -20,7 +20,7 @@ user = 'gi9ruf6zithfmw64' #产品的数字ID
 pwd = 'VW6nAnxPSC'
 
 # Received messages from subscriptions will be delivered to this callback
-c = MQTTClient(client_id, server,port,user,pwd,60) 
+c = MQTTClient(client_id, server,port,user,pwd,300) 
 
 def sub_cb(topic, msg):
     print((topic, msg))
@@ -43,13 +43,17 @@ def main():
     c.connect()
     c.subscribe("attributes/push")
     pt=0
+    cnt=0
     ct=utime.ticks_ms()
     while True:
         c.check_msg()
         ct=utime.ticks_ms()
-        if ct-pt>5000:
+        if ct-pt>=6000 or ct-pt<0:
             pt=utime.ticks_ms()
-            c.publish(b"attributes", '{"temp": '+str(int(random.random()*100))+'}')
+            cnt+=1
+            if cnt>=50:
+                cnt=0                
+                c.publish(b"attributes", '{"temp": '+str(int(random.random()*100))+'}')
     
 if __name__ == '__main__':
     main()
