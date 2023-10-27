@@ -3,6 +3,7 @@ from machine import Pin
 import network
 import utime
 import random
+import ujson
 
 
 up = Pin(15, Pin.OUT)
@@ -10,8 +11,8 @@ down = Pin(4, Pin.OUT)
 lock = Pin(2, Pin.OUT)
 stop = Pin(5, Pin.OUT)
 
-ssid = 'bbhh'
-password = 'lb19850922'
+ssid = 'CU_future'
+password = '13582579999'
 
 client_id='pc_esp32' 
 server = 'bj-2-mqtt.iot-api.com' 
@@ -23,8 +24,25 @@ pwd = 'VW6nAnxPSC'
 c = MQTTClient(client_id, server,port,user,pwd,300) 
 
 def sub_cb(topic, msg):
-    print((topic, msg))
-    
+    # print((topic, msg))
+    msg=ujson.loads(msg)
+    # print(list(msg.keys())[0])
+    if list(msg.keys())[0]=='lock':
+        lock.value(int(msg['lock']))
+        utime.sleep(1)
+        lock.value(0)
+    if list(msg.keys())[0]=='stop':
+        stop.value(int(msg['stop']))
+        utime.sleep(1)
+        stop.value(0)
+    if list(msg.keys())[0]=='up':
+        up.value(int(msg['up']))
+        utime.sleep(1)
+        up.value(0)
+    if list(msg.keys())[0]=='down':
+        down.value(int(msg['down']))
+        utime.sleep(1)
+        down.value(0)           
 
 def do_connect():
     wlan = network.WLAN(network.STA_IF)
@@ -51,9 +69,10 @@ def main():
         if ct-pt>=6000 or ct-pt<0:
             pt=utime.ticks_ms()
             cnt+=1
-            if cnt>=50:
+            if cnt>=10:   #心跳包间隔，10为1分钟
                 cnt=0                
-                c.publish(b"attributes", '{"temp": '+str(int(random.random()*100))+'}')
+                # c.publish(b"attributes", '{"temp": '+str(int(random.random()*100))+'}')
+                c.ping()
     
 if __name__ == '__main__':
     main()
