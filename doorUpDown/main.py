@@ -21,7 +21,7 @@ user = 'gi9ruf6zithfmw64' #产品的数字ID
 pwd = 'VW6nAnxPSC'
 
 # Received messages from subscriptions will be delivered to this callback
-c = MQTTClient(client_id, server,port,user,pwd,300) 
+c = MQTTClient(client_id, server,port,user,pwd,60) 
 
 def sub_cb(topic, msg):
     # print((topic, msg))
@@ -69,7 +69,7 @@ def main():
         if ct-pt>=6000 or ct-pt<0:
             pt=utime.ticks_ms()
             cnt+=1
-            if cnt>=10:   #心跳包间隔，10为1分钟
+            if cnt>=5:   #心跳包间隔，10为1分钟
                 cnt=0                
                 # c.publish(b"attributes", '{"temp": '+str(int(random.random()*100))+'}')
                 c.ping()
