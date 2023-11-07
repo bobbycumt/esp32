@@ -5,14 +5,17 @@ import utime
 import random
 import ujson
 
+wlan = network.WLAN(network.STA_IF)
 
 up = Pin(15, Pin.OUT)
 down = Pin(4, Pin.OUT)
 lock = Pin(2, Pin.OUT)
 stop = Pin(5, Pin.OUT)
 
-ssid = 'CU_future'
-password = '13582579999'
+# ssid = 'CU_future'
+# password = '13582579999'
+ssid = 'bbhh'
+password = 'lb19850922'
 
 client_id='pc_esp32' 
 server = 'bj-2-mqtt.iot-api.com' 
@@ -45,7 +48,9 @@ def sub_cb(topic, msg):
         down.value(0)           
 
 def do_connect():
-    wlan = network.WLAN(network.STA_IF)
+#     wlan = network.WLAN(network.STA_IF)
+    wlan.active(False)
+    utime.sleep_ms(100)
     wlan.active(True)
     # print(wlan.scan())
     if not wlan.isconnected():
@@ -56,23 +61,32 @@ def do_connect():
     print('network config:', wlan.ifconfig())
 
 def main():
-    do_connect()
-    c.set_callback(sub_cb)
-    c.connect()
-    c.subscribe("attributes/push")
+#     do_connect()
+#     c.set_callback(sub_cb)
+#     c.connect()
+#     c.subscribe("attributes/push")
     pt=0
     cnt=0
-    ct=utime.ticks_ms()
     while True:
-        c.check_msg()
-        ct=utime.ticks_ms()
-        if ct-pt>=6000 or ct-pt<0:
-            pt=utime.ticks_ms()
-            cnt+=1
-            if cnt>=5:   #心跳包间隔，10为1分钟
-                cnt=0                
-                # c.publish(b"attributes", '{"temp": '+str(int(random.random()*100))+'}')
+        if not wlan.isconnected():
+            do_connect()
+            c.set_callback(sub_cb)
+            c.connect()
+            c.subscribe("attributes/push")            
+        try:
+            c.check_msg()
+        except:
+            print("error0")
+        utime.sleep_ms(100)
+        cnt+=1
+        lock.value(cnt%2)
+        if cnt>=300:
+            cnt=0
+#             c.publish(b"attributes", '{"temp": '+str(int(random.random()*100))+'}')
+            try:
                 c.ping()
+            except:
+                print("error1")
     
 if __name__ == '__main__':
     main()
