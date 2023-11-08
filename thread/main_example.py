@@ -5,8 +5,12 @@ import utime
 import random
 import ujson
 import _thread
+import uping
+
 
 f=0
+chkmsg_id=0
+online_id=0
 wlan = network.WLAN(network.STA_IF)
 up = Pin(15, Pin.OUT)
 down = Pin(4, Pin.OUT)
@@ -78,23 +82,39 @@ def wifi_con():
             c.set_callback(sub_cb)
             c.connect()
             c.subscribe("attributes/push")  
-            f=1    
+            if f==0:
+                f=1
 
 def chkmsg():
+    global chkmsg_id
     print('----2----')
     while 1:
-        c.wait_msg()
-    
+        try:
+            c.wait_msg()
+        except:
+            chkmsg_id=1
+            _thread.exit()
+            # print("error:wait_msg")
+            # utime.sleep(1)
+        # c.wait_msg()
 def online():
+    global online_id
     print('----3----')
     while 1:
-        c.ping()
+        try:
+            c.ping()
+            # print("online")
+        except:
+            online_id=1
+            _thread.exit()
+            # print("error:ping")
         utime.sleep(10)
-        print("online")
 
 def main():
     global f
-    print('----所有线程开始执行----')
+    global chkmsg_id
+    global online_id
+    print('--------')
     #创建互斥锁
     gLock = _thread.allocate_lock()
     
@@ -104,10 +124,20 @@ def main():
     #创建线程1
     _thread.start_new_thread(wifi_con,())
     while 1:
-        if f:
-            f=0
+        if f==1:
+            f=2
             _thread.start_new_thread(chkmsg,())
             _thread.start_new_thread(online,())
+        if chkmsg_id==1:
+            chkmsg_id=0
+            _thread.start_new_thread(chkmsg,())
+            utime.sleep(10)
+        if online_id==1:
+            online_id=0
+            _thread.start_new_thread(online,())
+            utime.sleep(10)
+        utime.sleep(5)
+            
     #休眠
     # utime.sleep(5)
     
