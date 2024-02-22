@@ -136,7 +136,6 @@ def main():
             online_id=0
             _thread.start_new_thread(online,())
             utime.sleep(10)
-        utime.sleep(5)
             
     #休眠
     # utime.sleep(5)
