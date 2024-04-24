@@ -6,7 +6,6 @@ import ujson
 import ssd1306
 from umqtt.simple import MQTTClient
 import _thread
-import uasyncio as asyncio
 
 # i2c=I2C(sda=Pin(21),scl=Pin(22))
 # display=ssd1306.SSD1306_I2C(128,32,i2c)
@@ -48,71 +47,45 @@ def mqtt_connect():
     return client
 
 def on_message(topic, msg):
+    global f
     print("Received '{payload}' from topic '{topic}'\n".format(
         payload = msg.decode(), topic = topic.decode()))
-
+    k=list(ujson.loads(msg.decode()).keys())
+    if k[0]=="get":
+        f=2
+    elif k[0]=="state":   
+        f=1
 def subscribe(client):
     client.set_callback(on_message)
     client.subscribe(TOPIC1)
-    
-def loop_publish(client):
-    msg_count = 0
-    msg_count1 = 0
-    t=5000
-    tt=10000
-    t1=utime.ticks_ms()
-    tt1=utime.ticks_ms()
-    while True:        
-        msg_dict = {
-            'tmp': msg_count,'humidity': msg_count1
-        }
-        msg = ujson.dumps(msg_dict)
-        client.check_msg()
-        t2=utime.ticks_ms()
-        tt2=utime.ticks_ms()
-#         display.fill(0)
-#         display.text(str(msg_count),0,0)
-#         display.text(str(msg_count1),0,20)
-#         display.show() 
-        if utime.ticks_diff(tt2,tt1)>=tt:
-            msg_count1+=1
-            
-            tt1=utime.ticks_ms()
-        if utime.ticks_diff(t2,t1)>=t:
-            msg_count += 1
-            result = client.publish(TOPIC, msg)
-            print("Send '{msg}' to topic '{topic}'".format(msg = msg, topic = TOPIC))
-            t1=utime.ticks_ms()
-
-async def waitmsg():
-    while True :
-        client.check_msg()
-        await asyncio.sleep_ms(100)
-
-async def loop_publish1(client):
-    msg_count = 0
-    msg_count1 = 0
-    while True :
-        msg_dict = {
-            'tmp': msg_count,'humidity': msg_count1
-        }
-        msg = ujson.dumps(msg_dict)
-        result = client.publish(TOPIC, msg)
-        print("Send '{msg}' to topic '{topic}'".format(msg = msg, topic = TOPIC))
-        await asyncio.sleep(10)
-        msg_count+=1
-        msg_count1+=1
 
 def main():
     do_connect()
-    client = mqtt_connect()
+    global f
+    f=0
+    client= mqtt_connect()
     subscribe(client)
-#     loop_publish(client)
-    loop = asyncio.get_event_loop()
-    loop.create_task(waitmsg())
-    loop.create_task(loop_publish1(client))
+    while 1:
+        if f==1:
+            msg_dict = {
+                    'tmp': 8
+                }
+            msg = ujson.dumps(msg_dict)
+            result = client.publish(TOPIC, msg)
+            print("Send '{msg}' to topic '{topic}'".format(msg = msg, topic = TOPIC))
+            print(1)
+            f=0
+        elif f==2:
+            msg_dict = {
+                    'humidity': 7
+                }
+            msg = ujson.dumps(msg_dict)
+            result = client.publish(TOPIC, msg)
+            print("Send '{msg}' to topic '{topic}'".format(msg = msg, topic = TOPIC))
+            print(1)
+            f=0
+        client.wait_msg()
 
-    loop.run_forever()
 
 
 if __name__=='__main__':
