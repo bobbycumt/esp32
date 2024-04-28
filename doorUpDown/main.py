@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from machine import Pin,I2C
 import utime
-from lib import urequests
+# from lib import urequests
 import ujson
-import ssd1306
+# import ssd1306
 from umqtt.simple import MQTTClient
 import dht
 
-th=dht.DHT11(Pin(3))
+th=dht.DHT11(Pin(18))
+person=Pin(19, Pin.IN)
 up = Pin(15, Pin.OUT)
 down = Pin(4, Pin.OUT)
 lock = Pin(2, Pin.OUT)
@@ -33,7 +34,7 @@ TOPIC1 = "attributes/push"
 
 f=0
 state=0
-
+utime.sleep(2)
 def do_connect():
     import network
     wlan = network.WLAN(network.STA_IF)
@@ -51,7 +52,7 @@ def do_connect():
         p13.value(0)
 
 def mqtt_connect():
-    client = MQTTClient(CLIENT_ID, SERVER, PORT, USERNAME, PASSWORD,keepalive=600)
+    client = MQTTClient(CLIENT_ID, SERVER, PORT, USERNAME, PASSWORD)
     client.connect()
     print('Connected to MQTT Broker "{server}"'.format(server = SERVER))
     return client
@@ -87,9 +88,6 @@ def main():
     client= mqtt_connect()
     subscribe(client)
     while 1:
-        th.measure()
-        t=th.temperature()
-        h=th.humidity()
         if f==1:
             lock.value(state)
             utime.sleep(1)
@@ -135,15 +133,25 @@ def main():
             print(4)
             f=0
         elif f==100:
+            try:
+                th.measure()
+                t=th.temperature()
+                h=th.humidity()
+            except :
+                print('TIMEDOUT')
+
             msg_dict = {
-                    'temperature': t, 'humidity': h
+                    'temperature': t, 'humidity': h, 'person':person.value()
                 }
             msg = ujson.dumps(msg_dict)
             result = client.publish(TOPIC, msg)
             print("Send '{msg}' to topic '{topic}'".format(msg = msg, topic = TOPIC))
             print(100)
             f=0
-        client.wait_msg()
+        elif f==0:
+            client.check_msg()
+            client.ping()
+            utime.sleep_ms(200)
 
 if __name__=='__main__':
     main()
