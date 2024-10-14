@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 from machine import Pin,I2C
+import machine
 import utime
+import onewire
 from lib import urequests
 import ujson
 import ssd1306
 from umqtt.simple import MQTTClient
 import dht
+from ds18x20 import DS18X20
 
+OneWirePin = 15
 th=dht.DHT11(Pin(2))
 
 # i2c=I2C(sda=Pin(21),scl=Pin(22))
@@ -86,6 +90,7 @@ def main():
             msg = ujson.dumps(msg_dict)
             result = client.publish(TOPIC, msg)
             print(1)
+            machine.reset()
             f=0
         elif f==2:
             msg_dict = {
@@ -98,7 +103,28 @@ def main():
             f=0
         client.wait_msg()
 
+def readDS18x20(): 
+    # the device is on GPIO22
+    dat = Pin(OneWirePin)
+    # create the onewire object
+    ds = DS18X20(onewire.OneWire(dat))
+    # scan for devices on the bus
+    roms = ds.scan()# 扫描挂载在单总线上的ds18B20设备
+    ds.convert_temp() # 数据转换
+    utime.sleep_ms(750)
+    values = []   
 
+    for rom in roms:
+        values.append(ds.read_temp(rom))
+        
+    # values.append(u"℃")
+#     print(values,r"℃")
+    return values
+
+def test():
+	while 1:
+		print(readDS18x20()[0])
+		utime.sleep(5)		
 
 if __name__=='__main__':
-    main()
+    test()
